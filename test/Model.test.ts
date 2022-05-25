@@ -705,7 +705,7 @@ const twoTabs: IJsonModel = {
             },
             {
                 type: "tabset",
-                id: "1",
+                id: "#1",
                 weight: 50,
                 children: [
                     {
