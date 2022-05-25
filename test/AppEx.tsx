@@ -33,7 +33,7 @@ export function AppEx(props) {
     }
 
     const onAddbyIdClick = (event: React.MouseEvent) => {
-        (selfRef.current as Layout).addTabToTabSet("#1", {
+        (selfRef.current as Layout).addTabToTabSet("1", {
             component: "text",
             name: "Text" + nextGridIndex.current++
         });
@@ -112,7 +112,7 @@ export function AppEx(props) {
                     onTouchStart={onAddDragMouseDown}>Add Drag</button>
                 <button data-id="add-active" onClick={onAddActiveClick}>Add Active</button>
                 <button data-id="add-indirect" onClick={onAddIndirectClick}>Add Indirect</button>
-                <button data-id="add-byId" onClick={onAddbyIdClick}>Add by Id #1</button>
+                <button data-id="add-byId" onClick={onAddbyIdClick}>Add by Id 1</button>
             </div>
             <div style={{ position: "relative", flexGrow: 1 }}>
                 <Layout
@@ -310,7 +310,7 @@ export const layoutEx2: IJsonModel = {
             {
                 type: "tabset",
                 weight: 50,
-                id: "#1",
+                id: "1",
                 children: [
                     {
                         type: "tab",

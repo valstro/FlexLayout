@@ -508,7 +508,7 @@ export class Model {
 
     /** @internal */
     _nextUniqueId() {
-        return "#" + getUUID();
+        return getUUID();
     }
 
     /** @internal */

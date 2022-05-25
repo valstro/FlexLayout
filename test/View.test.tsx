@@ -555,7 +555,7 @@ context("Add methods", () => {
         checkBorderTab("/border/right", 1, false, "Text0");
     })
 
-    it('add to tabset with id #1', () => {
+    it('add to tabset with id 1', () => {
         cy.get('[data-id=add-byId').click();
         findAllTabSets().should("have.length", 3);
         checkTab("/ts1", 0, false, "Two");

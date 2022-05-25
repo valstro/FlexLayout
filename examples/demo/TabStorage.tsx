@@ -48,7 +48,7 @@ export function TabStorage({ tab, layout }: { tab: TabNode; layout: Layout; }) {
         const json = dragging instanceof TabNode ? dragging.toJson() as IJsonTabNode : dragging;
 
         if (json.id === undefined) {
-            json.id = `#${v4()}`;
+            json.id = `${v4()}`;
         }
 
         setStoredTabs(tabs => [...tabs, json]);
@@ -89,7 +89,7 @@ export function TabStorage({ tab, layout }: { tab: TabNode; layout: Layout; }) {
         const json = dragging instanceof TabNode ? dragging.toJson() as IJsonTabNode : dragging;
 
         if (json.id === undefined) {
-            json.id = `#${v4()}`;
+            json.id = v4();
         }
 
         setStoredTabs(tabs => {
