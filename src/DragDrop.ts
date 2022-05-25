@@ -96,10 +96,10 @@ export class DragDrop {
             this._glass!.focus();
             this._glass!.addEventListener("keydown", this._onKeyPress);
             // TODO: Turn off only when settings applied
-            // this._glass!.addEventListener("dragenter", this._onDragEnter, { passive: false });
+            this._glass!.addEventListener("dragenter", this._onDragEnter, { passive: false });
             this._glass!.addEventListener("dragover", this._onMouseMove, { passive: false });
             // TODO: Turn off only when settings applied
-            // this._glass!.addEventListener("dragleave", this._onDragLeave, { passive: false });
+            this._glass!.addEventListener("dragleave", this._onDragLeave, { passive: false });
             this._glassShowing = true;
             this._fDragCancel = fCancel;
             this._manualGlassManagement = false;
@@ -256,6 +256,8 @@ export class DragDrop {
         this._document!.removeEventListener("mouseup", this._onMouseUp);
         this._document!.removeEventListener("touchend", this._onMouseUp);
         this._document!.removeEventListener("touchmove", this._onMouseMove);
+        
+        
         this.hideGlass();
         if (this._fDragCancel !== undefined) {
             this._fDragCancel(this._dragging);
@@ -332,15 +334,22 @@ export class DragDrop {
 
         this._active = false;
 
-        this._rootElement!.removeEventListener("dragenter", this._onDragEnter);
-        this._rootElement!.removeEventListener("dragover", this._onMouseMove);
-        this._rootElement!.removeEventListener("dragleave", this._onDragLeave);
-        this._document!.removeEventListener("dragend", this._onDragCancel);
-        this._document!.removeEventListener("drop", this._onMouseUp);
-        this._document!.removeEventListener("mousemove", this._onMouseMove);
-        this._document!.removeEventListener("mouseup", this._onMouseUp);
-        this._document!.removeEventListener("touchend", this._onMouseUp);
-        this._document!.removeEventListener("touchmove", this._onMouseMove);
+        // TODO: Why do we need to check for this?
+        // TODO: Check garbage collection
+        if (this._rootElement) {
+            this._rootElement!.removeEventListener("dragenter", this._onDragEnter);
+            this._rootElement!.removeEventListener("dragover", this._onMouseMove);
+            this._rootElement!.removeEventListener("dragleave", this._onDragLeave);
+        }
+
+        if(this._document) {
+            this._document!.removeEventListener("dragend", this._onDragCancel);
+            this._document!.removeEventListener("drop", this._onMouseUp);
+            this._document!.removeEventListener("mousemove", this._onMouseMove);
+            this._document!.removeEventListener("mouseup", this._onMouseUp);
+            this._document!.removeEventListener("touchend", this._onMouseUp);
+            this._document!.removeEventListener("touchmove", this._onMouseMove);
+        }
 
         if (this._dragStartElement) {
             this._dragStartElement.removeEventListener("dragend", this._onMouseUp);

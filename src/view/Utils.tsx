@@ -1,6 +1,7 @@
 import * as React from "react";
 import { TabNode } from "../model/TabNode";
-import { IconFactory, ILayoutCallbacks, ITitleObject, TitleFactory } from "./Layout";
+import { TabSetNode } from "../model/TabSetNode";
+import { DragEventDataFactory, IconFactory, ILayoutCallbacks, ITitleObject, TitleFactory } from "./Layout";
 
 /** @internal */
 export function getRenderStateEx(
@@ -77,5 +78,12 @@ export function removeDragGhostImage(event: React.DragEvent<HTMLDivElement>) {
     dragIcon.style.opacity = '0';
     if(event.dataTransfer) {
         event.dataTransfer.setDragImage(dragIcon,0, 0);
+    }
+}
+
+export function writeNodeJsonToDragEvent(e: React.DragEvent<HTMLDivElement>, node: TabNode | TabSetNode, dragEventDataFactory?: DragEventDataFactory) {
+    if (e.dataTransfer) {
+        const data = dragEventDataFactory ? dragEventDataFactory(node) : { fromExternalWindow: true, nodeJson: node.toJson() };
+        e.dataTransfer.setData("text/plain", JSON.stringify(data));
     }
 }

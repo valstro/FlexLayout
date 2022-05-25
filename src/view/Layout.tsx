@@ -42,6 +42,7 @@ export type ShowOverflowMenuCallback = (
 export type TabSetPlaceHolderCallback = (node: TabSetNode) => React.ReactNode;
 export type IconFactory = (node: TabNode) => React.ReactNode;
 export type TitleFactory = (node: TabNode) => ITitleObject | React.ReactNode;
+export type DragEventDataFactory = (node: TabNode | TabSetNode) => Record<string, any>;
 
 export interface ILayoutProps {
     model: Model;
@@ -50,6 +51,7 @@ export interface ILayoutProps {
     fontFamily?: string;
     iconFactory?: IconFactory;
     titleFactory?: TitleFactory;
+    dragEventDataFactory?: DragEventDataFactory;
     icons?: IIcons;
     onAction?: (action: Action) => Action | undefined;
     onRenderTab?: (
@@ -646,7 +648,7 @@ export class Layout extends React.Component<ILayoutProps, ILayoutState> {
                 splitterComponents.push(<Splitter key={child.getId()} layout={this} path={newPath} node={child} />);
             } else if (child instanceof TabSetNode) {
                 const newPath = path + "/ts" + (rowCount++);
-                tabSetComponents.push(<TabSet key={child.getId()} layout={this} path={newPath} node={child} iconFactory={this.props.iconFactory} titleFactory={this.props.titleFactory} icons={this.icons} />);
+                tabSetComponents.push(<TabSet key={child.getId()} layout={this} path={newPath} node={child} iconFactory={this.props.iconFactory} titleFactory={this.props.titleFactory} dragEventDataFactory={this.props.dragEventDataFactory} icons={this.icons} />);
                 this.renderChildren(newPath, child, tabSetComponents, tabComponents, floatingWindows, splitterComponents);
             } else if (child instanceof TabNode) {
                 const newPath = path + "/t" + (tabCount++);

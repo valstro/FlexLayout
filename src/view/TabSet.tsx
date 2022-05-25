@@ -4,12 +4,12 @@ import { Actions } from "../model/Actions";
 import { TabNode } from "../model/TabNode";
 import { TabSetNode } from "../model/TabSetNode";
 import { showPopup } from "../PopupMenu";
-import { IIcons, ILayoutCallbacks, ITitleObject } from "./Layout";
+import { IIcons, ILayoutCallbacks, ITitleObject, DragEventDataFactory } from "./Layout";
 import { TabButton } from "./TabButton";
 import { useTabOverflow } from "./TabOverflowHook";
 import { Orientation } from "../Orientation";
 import { CLASSES } from "../Types";
-import { hideElement, isAuxMouseEvent, removeDragGhostImage } from "./Utils";
+import { hideElement, isAuxMouseEvent, removeDragGhostImage, writeNodeJsonToDragEvent } from "./Utils";
 
 /** @internal */
 export interface ITabSetProps {
@@ -17,6 +17,7 @@ export interface ITabSetProps {
     node: TabSetNode;
     iconFactory?: (node: TabNode) => (React.ReactNode | undefined);
     titleFactory?: (node: TabNode) => (ITitleObject | React.ReactNode | undefined);
+    dragEventDataFactory?: DragEventDataFactory;
     icons: IIcons;
     editingTab?: TabNode;
     path?: string;
@@ -24,7 +25,7 @@ export interface ITabSetProps {
 
 /** @internal */
 export const TabSet = (props: ITabSetProps) => {
-    const { node, layout, iconFactory, titleFactory, icons, path } = props;
+    const { node, layout, iconFactory, titleFactory, dragEventDataFactory, icons, path } = props;
 
     const toolbarRef = React.useRef<HTMLDivElement | null>(null);
     const overflowbuttonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -69,6 +70,7 @@ export const TabSet = (props: ITabSetProps) => {
     const onDragStart: React.DragEventHandler<HTMLDivElement> = (event) => {
         event.stopPropagation();
         removeDragGhostImage(event);
+        writeNodeJsonToDragEvent(event, node, dragEventDataFactory);
         event.dataTransfer.effectAllowed = "copyMove";
         const name = getName();
         const message = layout.i18nName(I18nLabel.Move_Tabset, name);
@@ -171,6 +173,7 @@ export const TabSet = (props: ITabSetProps) => {
                     selected={isSelected}
                     iconFactory={iconFactory}
                     titleFactory={titleFactory}
+                    dragEventDataFactory={dragEventDataFactory}
                     icons={icons}
                 />);
                 if (i < node.getChildren().length-1) {

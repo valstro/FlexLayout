@@ -4,10 +4,10 @@ import { Actions } from "../model/Actions";
 import { TabNode } from "../model/TabNode";
 import { TabSetNode } from "../model/TabSetNode";
 import { Rect } from "../Rect";
-import { IconFactory, IIcons, ILayoutCallbacks, TitleFactory } from "./Layout";
+import { IconFactory, IIcons, ILayoutCallbacks, TitleFactory, DragEventDataFactory } from "./Layout";
 import { ICloseType } from "../model/ICloseType";
 import { CLASSES } from "../Types";
-import { getRenderStateEx, isAuxMouseEvent, removeDragGhostImage } from "./Utils";
+import { getRenderStateEx, isAuxMouseEvent, removeDragGhostImage, writeNodeJsonToDragEvent } from "./Utils";
 
 /** @internal */
 export interface ITabButtonProps {
@@ -16,28 +16,30 @@ export interface ITabButtonProps {
     selected: boolean;
     iconFactory?: IconFactory;
     titleFactory?: TitleFactory;
+    dragEventDataFactory?: DragEventDataFactory;
     icons: IIcons;
     path: string;
 }
 
 /** @internal */
 export const TabButton = (props: ITabButtonProps) => {
-    const { layout, node, selected, iconFactory, titleFactory, icons, path } = props;
+    const { layout, node, selected, iconFactory, titleFactory, dragEventDataFactory, icons, path } = props;
     const selfRef = React.useRef<HTMLDivElement | null>(null);
     const contentRef = React.useRef<HTMLInputElement | null>(null);
 
     const onDragStart: React.DragEventHandler<HTMLDivElement> = (event) => {
         event.stopPropagation();
         removeDragGhostImage(event);
+        writeNodeJsonToDragEvent(event, node, dragEventDataFactory);
         event.dataTransfer.effectAllowed = "copyMove";
-        layout.dragStart(event, undefined, node, node.isEnableDrag())
-    }
+        layout.dragStart(event, undefined, node, node.isEnableDrag());
+    };
 
     const onMouseDown = (event: React.MouseEvent<HTMLDivElement, MouseEvent> | React.TouchEvent<HTMLDivElement>) => {
-        if(node.isEnableHTMLDragAndDrop()) {
+        if (node.isEnableHTMLDragAndDrop()) {
             event.stopPropagation();
         }
-     
+
         if (!isAuxMouseEvent(event) && !layout.getEditingTab() && !node.isEnableHTMLDragAndDrop()) {
             layout.dragStart(event, undefined, node, node.isEnableDrag(), onClick as any, onDoubleClick);
         }
@@ -54,7 +56,8 @@ export const TabButton = (props: ITabButtonProps) => {
     };
 
     const onClick = (event: React.MouseEvent<Element, MouseEvent>) => {
-        if(event.detail === 2 && node.isEnableHTMLDragAndDrop()) {
+        if (event.detail === 2 && node.isEnableHTMLDragAndDrop()) {
+            event.stopPropagation();
             onDoubleClick();
         } else {
             layout.doAction(Actions.selectTab(node.getId()));
@@ -157,15 +160,9 @@ export const TabButton = (props: ITabButtonProps) => {
 
     const renderState = getRenderStateEx(layout, node, iconFactory, titleFactory);
 
-    let content = renderState.content ? (
-        <div className={cm(CLASSES.FLEXLAYOUT__TAB_BUTTON_CONTENT)}>
-            {renderState.content}
-        </div>) : null;
+    let content = renderState.content ? <div className={cm(CLASSES.FLEXLAYOUT__TAB_BUTTON_CONTENT)}>{renderState.content}</div> : null;
 
-    const leading = renderState.leading ? (
-        <div className={cm(CLASSES.FLEXLAYOUT__TAB_BUTTON_LEADING)}>
-            {renderState.leading}
-        </div>) : null;
+    const leading = renderState.leading ? <div className={cm(CLASSES.FLEXLAYOUT__TAB_BUTTON_LEADING)}>{renderState.leading}</div> : null;
 
     if (layout.getEditingTab() === node) {
         content = (
@@ -193,8 +190,9 @@ export const TabButton = (props: ITabButtonProps) => {
                 className={cm(CLASSES.FLEXLAYOUT__TAB_BUTTON_TRAILING)}
                 onMouseDown={onCloseMouseDown}
                 onClick={onClose}
-                onTouchStart={onCloseMouseDown}>
-                {(typeof icons.close === "function") ? icons.close(node) : icons.close}
+                onTouchStart={onCloseMouseDown}
+            >
+                {typeof icons.close === "function" ? icons.close(node) : icons.close}
             </div>
         );
     }
