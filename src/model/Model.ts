@@ -59,8 +59,7 @@ export class Model {
         attributeDefinitions.add("splitterExtra", 0).setType(Attribute.NUMBER);
         attributeDefinitions.add("enableEdgeDock", true).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("rootOrientationVertical", false).setType(Attribute.BOOLEAN);
-        attributeDefinitions.add("marginInsets", { top: 0, right: 0, bottom: 0, left: 0 })
-            .setType("IInsets");
+        attributeDefinitions.add("marginInsets", { top: 0, right: 0, bottom: 0, left: 0 }).setType("IInsets");
         attributeDefinitions.add("enableUseVisibility", false).setType(Attribute.BOOLEAN);
 
         // tab
@@ -69,6 +68,7 @@ export class Model {
         attributeDefinitions.add("tabEnableFloat", false).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabEnableDrag", true).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabEnableRename", true).setType(Attribute.BOOLEAN);
+        attributeDefinitions.add("tabEnableHTMLDragAndDrop", false).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabClassName", undefined).setType(Attribute.STRING);
         attributeDefinitions.add("tabIcon", undefined).setType(Attribute.STRING);
         attributeDefinitions.add("tabEnableRenderOnDemand", true).setType(Attribute.BOOLEAN);
@@ -83,16 +83,15 @@ export class Model {
         attributeDefinitions.add("tabSetEnableDivide", true).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabSetEnableMaximize", true).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabSetEnableClose", false).setType(Attribute.BOOLEAN);
+        attributeDefinitions.add("tabSetEnableHTMLDragAndDrop", false).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabSetAutoSelectTab", true).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabSetClassNameTabStrip", undefined).setType(Attribute.STRING);
         attributeDefinitions.add("tabSetClassNameHeader", undefined).setType(Attribute.STRING);
         attributeDefinitions.add("tabSetEnableTabStrip", true).setType(Attribute.BOOLEAN);
         attributeDefinitions.add("tabSetHeaderHeight", 0).setType(Attribute.NUMBER);
         attributeDefinitions.add("tabSetTabStripHeight", 0).setType(Attribute.NUMBER);
-        attributeDefinitions.add("tabSetMarginInsets", { top: 0, right: 0, bottom: 0, left: 0 })
-            .setType("IInsets");
-        attributeDefinitions.add("tabSetBorderInsets", { top: 0, right: 0, bottom: 0, left: 0 })
-            .setType("IInsets");
+        attributeDefinitions.add("tabSetMarginInsets", { top: 0, right: 0, bottom: 0, left: 0 }).setType("IInsets");
+        attributeDefinitions.add("tabSetBorderInsets", { top: 0, right: 0, bottom: 0, left: 0 }).setType("IInsets");
         attributeDefinitions.add("tabSetTabLocation", "top").setType("ITabLocation");
         attributeDefinitions.add("tabSetMinWidth", 0).setType(Attribute.NUMBER);
         attributeDefinitions.add("tabSetMinHeight", 0).setType(Attribute.NUMBER);
@@ -134,7 +133,6 @@ export class Model {
     private _onCreateTabSet?: (tabNode?: TabNode) => ITabSetAttributes;
     /** @internal */
     private _showHiddenBorder: DockLocation;
-
 
     /**
      * 'private' constructor. Use the static method Model.fromJson(json) to create a model
@@ -188,7 +186,7 @@ export class Model {
     }
 
     /** @internal */
-    _setMaximizedTabset(tabsetNode: (TabSetNode | undefined)) {
+    _setMaximizedTabset(tabsetNode: TabSetNode | undefined) {
         this._maximizedTabSet = tabsetNode;
     }
 
@@ -510,7 +508,7 @@ export class Model {
 
     /** @internal */
     _nextUniqueId() {
-        return '#' + getUUID();
+        return "#" + getUUID();
     }
 
     /** @internal */
@@ -535,7 +533,7 @@ export class Model {
      * set callback called when a new TabSet is created.
      * The tabNode can be undefined if it's the auto created first tabset in the root row (when the last
      * tab is deleted, the root tabset can be recreated)
-     * @param onCreateTabSet 
+     * @param onCreateTabSet
      */
     setOnCreateTabSet(onCreateTabSet: (tabNode?: TabNode) => ITabSetAttributes) {
         this._onCreateTabSet = onCreateTabSet;
@@ -558,4 +556,3 @@ export class Model {
         return JSON.stringify(this.toJson());
     }
 }
-

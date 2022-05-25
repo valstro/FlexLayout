@@ -920,7 +920,7 @@ export class Layout extends React.Component<ILayoutProps, ILayoutState> {
             this.dragDiv.className = this.getClassName(CLASSES.FLEXLAYOUT__DRAG_RECT);
             this.dragDiv.setAttribute("data-layout-path", "/drag-rectangle");
             this.dragRectRender(this.dragDivText, this.dragNode, this.newTabJson);
-
+     
             rootdiv.appendChild(this.dragDiv);
         }
         // add edge indicators

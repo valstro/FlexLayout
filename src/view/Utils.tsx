@@ -69,3 +69,13 @@ export function isAuxMouseEvent(event: React.MouseEvent<HTMLDivElement, MouseEve
     return auxEvent;
 }
 
+export function removeDragGhostImage(event: React.DragEvent<HTMLDivElement>) {
+    const dragIcon = document.createElement('img');
+    dragIcon.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    dragIcon.width = 0;
+    dragIcon.height = 0;
+    dragIcon.style.opacity = '0';
+    if(event.dataTransfer) {
+        event.dataTransfer.setDragImage(dragIcon,0, 0);
+    }
+}

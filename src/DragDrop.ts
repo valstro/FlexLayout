@@ -45,6 +45,8 @@ export class DragDrop {
     /** @internal */
     private _dragging: boolean = false;
     /** @internal */
+    private _dragStartElement?: HTMLElement | undefined;
+    /** @internal */
     private _active: boolean = false; // drag and drop is in progress, can be used on ios to prevent body scrolling (see demo)
     /** @internal */
     private _document?: HTMLDocument;
@@ -88,14 +90,16 @@ export class DragDrop {
                 this._rootElement = this._document.body;
             }
             this.resizeGlass();
-            this._document.defaultView?.addEventListener('resize', this.resizeGlass);
-            this._document.body.appendChild(this._glass!);
+            this._document.defaultView?.addEventListener("resize", this.resizeGlass);
+            setTimeout(() => this._document!.body.appendChild(this._glass!), 0); // Allows glass to be painted, once HTML drag is underway
             this._glass!.tabIndex = -1;
             this._glass!.focus();
             this._glass!.addEventListener("keydown", this._onKeyPress);
-            this._glass!.addEventListener("dragenter", this._onDragEnter, { passive: false });
+            // TODO: Turn off only when settings applied
+            // this._glass!.addEventListener("dragenter", this._onDragEnter, { passive: false });
             this._glass!.addEventListener("dragover", this._onMouseMove, { passive: false });
-            this._glass!.addEventListener("dragleave", this._onDragLeave, { passive: false });
+            // TODO: Turn off only when settings applied
+            // this._glass!.addEventListener("dragleave", this._onDragLeave, { passive: false });
             this._glassShowing = true;
             this._fDragCancel = fCancel;
             this._manualGlassManagement = false;
@@ -113,7 +117,7 @@ export class DragDrop {
     hideGlass() {
         if (this._glassShowing) {
             this._document!.body.removeChild(this._glass!);
-            this._document!.defaultView?.removeEventListener('resize', this.resizeGlass);
+            this._document!.defaultView?.removeEventListener("resize", this.resizeGlass);
             this._glassShowing = false;
             this._document = undefined;
             this._rootElement = undefined;
@@ -129,12 +133,12 @@ export class DragDrop {
     /** @internal */
     _setDefaultGlassCursor(cursor: string) {
         this._defaultGlassCursor = cursor;
-        this._updateGlassCursor()
+        this._updateGlassCursor();
     }
 
     setGlassCursorOverride(cursor: string | undefined) {
         this._glassCursorOverride = cursor;
-        this._updateGlassCursor()
+        this._updateGlassCursor();
     }
 
     startDrag(
@@ -179,8 +183,10 @@ export class DragDrop {
             if (!window.matchMedia || window.matchMedia("(pointer: fine)").matches) {
                 this._setDefaultGlassCursor(getComputedStyle(event.target as Element).cursor);
             }
-            this._stopPropagation(event);
-            this._preventDefault(event);
+            if (event.type !== "dragstart") {
+                this._stopPropagation(event);
+                this._preventDefault(event);
+            }
         } else {
             this._startX = 0;
             this._startY = 0;
@@ -197,7 +203,7 @@ export class DragDrop {
 
         this._active = true;
 
-        if (event?.type === 'dragenter') {
+        if (event?.type === "dragenter") {
             this._dragDepth = 1;
             this._rootElement.addEventListener("dragenter", this._onDragEnter, { passive: false });
             this._rootElement.addEventListener("dragover", this._onMouseMove, { passive: false });
@@ -205,7 +211,12 @@ export class DragDrop {
             this._document.addEventListener("dragend", this._onDragCancel, { passive: false });
             this._document.addEventListener("drop", this._onMouseUp, { passive: false });
         } else {
-            this._document.addEventListener("mouseup", this._onMouseUp, { passive: false });
+            if (event?.type === "dragstart" && event.target) {
+                this._dragStartElement = event.target as HTMLElement;
+                this._dragStartElement.addEventListener("dragend", this._onMouseUp, { passive: false });
+            } else {
+                this._document.addEventListener("mouseup", this._onMouseUp, { passive: false });
+            }
             this._document.addEventListener("mousemove", this._onMouseMove, { passive: false });
             this._document.addEventListener("touchend", this._onMouseUp, { passive: false });
             this._document.addEventListener("touchmove", this._onMouseMove, { passive: false });
@@ -331,6 +342,11 @@ export class DragDrop {
         this._document!.removeEventListener("touchend", this._onMouseUp);
         this._document!.removeEventListener("touchmove", this._onMouseMove);
 
+        if (this._dragStartElement) {
+            this._dragStartElement.removeEventListener("dragend", this._onMouseUp);
+            this._dragStartElement = undefined;
+        }
+
         if (!this._manualGlassManagement) {
             this.hideGlass();
         }
@@ -346,7 +362,6 @@ export class DragDrop {
                 this._fDragCancel(this._dragging);
             }
             if (Math.abs(this._startX - posEvent.clientX) <= 5 && Math.abs(this._startY - posEvent.clientY) <= 5) {
-
                 let isDoubleClick = false;
                 const clickTime = new Date().getTime();
                 // check for double click
@@ -358,7 +373,7 @@ export class DragDrop {
                         }
                     }
                 }
- 
+
                 if (!isDoubleClick && this._fClick) {
                     this._fClick(event);
                 }
@@ -373,6 +388,7 @@ export class DragDrop {
 
     /** @internal */
     private _onDragEnter(event: DragEvent) {
+        event.dataTransfer!.dropEffect = "copy";
         this._preventDefault(event);
         this._stopPropagation(event);
         this._dragDepth++;

@@ -9,7 +9,7 @@ import { TabButton } from "./TabButton";
 import { useTabOverflow } from "./TabOverflowHook";
 import { Orientation } from "../Orientation";
 import { CLASSES } from "../Types";
-import { hideElement, isAuxMouseEvent } from "./Utils";
+import { hideElement, isAuxMouseEvent, removeDragGhostImage } from "./Utils";
 
 /** @internal */
 export interface ITabSetProps {
@@ -56,16 +56,35 @@ export const TabSet = (props: ITabSetProps) => {
         userControlledLeft.current = false;
     };
 
+    const getName = () => {
+        let name = node.getName();
+        if (name === undefined) {
+            name = "";
+        } else {
+            name = ": " + name;
+        }
+        return name;
+    }
+
+    const onDragStart: React.DragEventHandler<HTMLDivElement> = (event) => {
+        event.stopPropagation();
+        removeDragGhostImage(event);
+        event.dataTransfer.effectAllowed = "copyMove";
+        const name = getName();
+        const message = layout.i18nName(I18nLabel.Move_Tabset, name);
+        layout.dragStart(event, message, node, node.isEnableDrag());
+    }
+
     const onMouseDown = (event: React.MouseEvent<HTMLDivElement, MouseEvent> | React.TouchEvent<HTMLDivElement>) => {
         if (!isAuxMouseEvent(event)) {
-            let name = node.getName();
-            if (name === undefined) {
-                name = "";
-            } else {
-                name = ": " + name;
-            }
+            const name = getName();
             layout.doAction(Actions.setActiveTabset(node.getId()));
-            if (!layout.getEditingTab()) {
+
+            if(node.isEnableHTMLDragAndDrop()) {
+                event.stopPropagation();
+            }
+
+            if (!layout.getEditingTab() && !node.isEnableHTMLDragAndDrop()) {
                 const message = layout.i18nName(I18nLabel.Move_Tabset, name);
                 if (node.getModel().getMaximizedTabset() !== undefined) {
                     layout.dragStart(event, message, node, false, (event2: Event) => undefined, onDoubleClick);
@@ -73,6 +92,14 @@ export const TabSet = (props: ITabSetProps) => {
                     layout.dragStart(event, message, node, node.isEnableDrag(), (event2: Event) => undefined, onDoubleClick);
                 }
             }
+        }
+    };
+
+    const onTabSetClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        if (isAuxMouseEvent(event) && !node.isEnableHTMLDragAndDrop()) {
+            layout.auxMouseClick(node, event);
+        } else if(node.isEnableHTMLDragAndDrop() && event.detail === 2) {
+            onDoubleClick();
         }
     };
 
@@ -109,7 +136,7 @@ export const TabSet = (props: ITabSetProps) => {
         event.stopPropagation();
     };
 
-    const onDoubleClick = (event: Event) => {
+    const onDoubleClick = () => {
         if (node.canMaximize()) {
             layout.maximize(node);
         }
@@ -339,8 +366,10 @@ export const TabSet = (props: ITabSetProps) => {
         <div className={tabStripClasses} style={tabStripStyle}
             data-layout-path={path + "/tabstrip"}
             onMouseDown={onMouseDown}
+            draggable={node.isEnableHTMLDragAndDrop() ? true : undefined}
+            onDragStart={node.isEnableHTMLDragAndDrop() ? onDragStart : undefined}
             onContextMenu={onContextMenu}
-            onClick={onAuxMouseClick}
+            onClick={onTabSetClick}
             onAuxClick={onAuxMouseClick}
             onTouchStart={onMouseDown}>
             <div ref={tabbarInnerRef} className={cm(CLASSES.FLEXLAYOUT__TABSET_TABBAR_INNER) + " " + cm(CLASSES.FLEXLAYOUT__TABSET_TABBAR_INNER_ + node.getTabLocation())}>
@@ -387,5 +416,3 @@ export const TabSet = (props: ITabSetProps) => {
         </div>
     );
 };
-
-

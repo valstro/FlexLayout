@@ -7,7 +7,7 @@ import { Rect } from "../Rect";
 import { IconFactory, IIcons, ILayoutCallbacks, TitleFactory } from "./Layout";
 import { ICloseType } from "../model/ICloseType";
 import { CLASSES } from "../Types";
-import { getRenderStateEx, isAuxMouseEvent } from "./Utils";
+import { getRenderStateEx, isAuxMouseEvent, removeDragGhostImage } from "./Utils";
 
 /** @internal */
 export interface ITabButtonProps {
@@ -26,10 +26,20 @@ export const TabButton = (props: ITabButtonProps) => {
     const selfRef = React.useRef<HTMLDivElement | null>(null);
     const contentRef = React.useRef<HTMLInputElement | null>(null);
 
-    const onMouseDown = (event: React.MouseEvent<HTMLDivElement, MouseEvent> | React.TouchEvent<HTMLDivElement>) => {
+    const onDragStart: React.DragEventHandler<HTMLDivElement> = (event) => {
+        event.stopPropagation();
+        removeDragGhostImage(event);
+        event.dataTransfer.effectAllowed = "copyMove";
+        layout.dragStart(event, undefined, node, node.isEnableDrag())
+    }
 
-        if (!isAuxMouseEvent(event) && !layout.getEditingTab()) {
-            layout.dragStart(event, undefined, node, node.isEnableDrag(), onClick, onDoubleClick);
+    const onMouseDown = (event: React.MouseEvent<HTMLDivElement, MouseEvent> | React.TouchEvent<HTMLDivElement>) => {
+        if(node.isEnableHTMLDragAndDrop()) {
+            event.stopPropagation();
+        }
+     
+        if (!isAuxMouseEvent(event) && !layout.getEditingTab() && !node.isEnableHTMLDragAndDrop()) {
+            layout.dragStart(event, undefined, node, node.isEnableDrag(), onClick as any, onDoubleClick);
         }
     };
 
@@ -43,11 +53,15 @@ export const TabButton = (props: ITabButtonProps) => {
         layout.showContextMenu(node, event);
     };
 
-    const onClick = () => {
-        layout.doAction(Actions.selectTab(node.getId()));
+    const onClick = (event: React.MouseEvent<Element, MouseEvent>) => {
+        if(event.detail === 2 && node.isEnableHTMLDragAndDrop()) {
+            onDoubleClick();
+        } else {
+            layout.doAction(Actions.selectTab(node.getId()));
+        }
     };
 
-    const onDoubleClick = (event: Event) => {
+    const onDoubleClick = () => {
         if (node.isEnableRename()) {
             onRename();
         }
@@ -85,7 +99,7 @@ export const TabButton = (props: ITabButtonProps) => {
         if (isClosable()) {
             layout.doAction(Actions.deleteTab(node.getId()));
         } else {
-            onClick();
+            onClick(event);
         }
     };
 
@@ -191,11 +205,13 @@ export const TabButton = (props: ITabButtonProps) => {
             data-layout-path={path}
             className={classNames}
             onMouseDown={onMouseDown}
-            onClick={onAuxMouseClick}
+            onClick={onClick}
             onAuxClick={onAuxMouseClick}
             onContextMenu={onContextMenu}
             onTouchStart={onMouseDown}
             title={node.getHelpText()}
+            draggable={node.isEnableHTMLDragAndDrop() ? true : undefined}
+            onDragStart={node.isEnableHTMLDragAndDrop() ? onDragStart : undefined}
         >
             {leading}
             {content}
